@@ -34,7 +34,7 @@ export class MyMCP extends McpAgent {
 					content: [
 					{
 						type: "text",
-						text: "Error: Failed to fetch GitHub trending repositories",
+						text: `❌ Failed to fetch GitHub Trending page. Status: ${res.status}`,
 					},
 					],
 				};
@@ -42,33 +42,41 @@ export class MyMCP extends McpAgent {
 
 				const html = await res.text();
 
-				const repoMatches = [...html.matchAll(/<h2 class="h3[^>]*>.*?<a href="\/([^"]+)"/g)];
+				const repoBlocks = [...html.matchAll(/<article[^>]*class="[^"]*Box-row[^"]*"[^>]*>([\s\S]*?)<\/article>/g)];
+				const topRepos: string[] = [];
 
-				const repos = repoMatches
-				.slice(0, 10)
-				.map((match, index) => `${index + 1}. ${match[1]}`);
+				for (let i = 0; i < Math.min(10, repoBlocks.length); i++) {
+				const block = repoBlocks[i][1];
 
-				if (repos.length === 0) {
-				return {
-					content: [
-					{
-						type: "text",
-						text: "No trending repositories found. GitHub may have updated their layout.",
-					},
-					],
-				};
+				const nameMatch = block.match(/<h2[^>]*>[\s\S]*?<a[^>]*href="\/([\w.-]+\/[\w.-]+)"/);
+				const name = nameMatch ? nameMatch[1] : "unknown/repo";
+				const link = `https://github.com/${name}`;
+
+				const descMatch = block.match(/<p[^>]*>(.*?)<\/p>/s);
+				let desc = descMatch
+					? descMatch[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()
+					: "No description provided.";
+
+				if (desc.length > 80) {
+					desc = desc.slice(0, 77) + "...";
 				}
+
+				topRepos.push(`**${i + 1}. [${name}](${link})**\n${desc}`);
+				}
+
+				const message = `**🔥 Top Trending GitHub Repos Today**\n\n${topRepos.join("\n\n")}`;
 
 				return {
 				content: [
 					{
 					type: "text",
-					text: `Top 10 Trending GitHub Repositories:\n\n${repos.join("\n")}`,
+					text: message,
 					},
 				],
 				};
 			}
 			);
+
 
 		// Calculator tool with multiple operations
 		this.server.tool(
