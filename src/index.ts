@@ -2,6 +2,11 @@ import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+// Define interface for Cloudflare Worker environment
+export interface Env {
+  // Define your environment variables here
+}
+
 // Define our MCP agent with tools
 export class MyMCP extends McpAgent {
 	server = new McpServer({
