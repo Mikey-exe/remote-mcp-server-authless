@@ -24,48 +24,52 @@ export class MyMCP extends McpAgent {
 			})
 		);
 		this.server.tool(
-			"get_weather",
+			"get_trending_repos",
 			{},
 			async () => {
-				const latitude = 37.7749; // Example latitude
-				const longitude = -122.4194; // Example longitude
-				
-				const res= await fetch(
-					`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
-    			);
+				const res = await fetch("https://github.com/trending");
 
 				if (!res.ok) {
-					return {
-						content: [
-							{
-								type: "text",
-								text: "Error: Failed to fetch weather data",
-							},
-						],
-					};
-				}
-
-				const data = (await res.json()) as {
-				current_weather: {
-					temperature: number;
-					windspeed: number;
-					weathercode: number;
-				};
-				};
-
-    const weather = data.current_weather;
 				return {
 					content: [
-						{
-							type: "text",
-							text: `Current weather in Windsor, Ontario: ${weather.temperature}°C, with wind speed of ${weather.windspeed} km/h.`,
-						},
+					{
+						type: "text",
+						text: "Error: Failed to fetch GitHub trending repositories",
+					},
 					],
 				};
-			}	
+				}
 
-			
-		);
+				const html = await res.text();
+
+				const repoMatches = [...html.matchAll(/<h2 class="h3[^>]*>.*?<a href="\/([^"]+)"/g)];
+
+				const repos = repoMatches
+				.slice(0, 10)
+				.map((match, index) => `${index + 1}. ${match[1]}`);
+
+				if (repos.length === 0) {
+				return {
+					content: [
+					{
+						type: "text",
+						text: "No trending repositories found. GitHub may have updated their layout.",
+					},
+					],
+				};
+				}
+
+				return {
+				content: [
+					{
+					type: "text",
+					text: `Top 10 Trending GitHub Repositories:\n\n${repos.join("\n")}`,
+					},
+				],
+				};
+			}
+			);
+
 		// Calculator tool with multiple operations
 		this.server.tool(
 			"calculate",
