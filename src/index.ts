@@ -23,7 +23,49 @@ export class MyMCP extends McpAgent {
 				content: [{ type: "text", text: String(a + b) }],
 			})
 		);
+		this.server.tool(
+			"get_weather",
+			{},
+			async () => {
+				const latitude = 37.7749; // Example latitude
+				const longitude = -122.4194; // Example longitude
+				
+				const res= await fetch(
+					`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+    			);
 
+				if (!res.ok) {
+					return {
+						content: [
+							{
+								type: "text",
+								text: "Error: Failed to fetch weather data",
+							},
+						],
+					};
+				}
+
+				const data = (await res.json()) as {
+				current_weather: {
+					temperature: number;
+					windspeed: number;
+					weathercode: number;
+				};
+				};
+
+    const weather = data.current_weather;
+				return {
+					content: [
+						{
+							type: "text",
+							text: `Current weather in Windsor, Ontario: ${weather.temperature}°C, with wind speed of ${weather.windspeed} km/h.`,
+						},
+					],
+				};
+			}	
+
+			
+		);
 		// Calculator tool with multiple operations
 		this.server.tool(
 			"calculate",
