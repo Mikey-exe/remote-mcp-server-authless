@@ -4,7 +4,8 @@ import { z } from "zod";
 
 // Define interface for Cloudflare Worker environment
 export interface Env {
-  // Define your environment variables here
+	/** Optional bearer token for simple auth */
+	AUTH_TOKEN?: string;
 }
 
 // Define our MCP agent with tools
@@ -118,8 +119,16 @@ export class MyMCP extends McpAgent {
 }
 
 export default {
-	fetch(request: Request, env: Env, ctx: ExecutionContext) {
-		const url = new URL(request.url);
+       fetch(request: Request, env: Env, ctx: ExecutionContext) {
+               const token = env.AUTH_TOKEN;
+               if (token) {
+                       const header = request.headers.get("Authorization");
+                       if (header !== `Bearer ${token}`) {
+                               return new Response("Unauthorized", { status: 401 });
+                       }
+               }
+
+               const url = new URL(request.url);
 
 		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
 			return MyMCP.serveSSE("/sse").fetch(request, env, ctx);
