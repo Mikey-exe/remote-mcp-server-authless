@@ -15,7 +15,23 @@ npm create cloudflare@latest -- my-mcp-server --template=cloudflare/ai/demos/rem
 
 ## Customizing your MCP Server
 
-To add your own [tools](https://developers.cloudflare.com/agents/model-context-protocol/tools/) to the MCP server, define each tool inside the `init()` method of `src/index.ts` using `this.server.tool(...)`. 
+To add your own [tools](https://developers.cloudflare.com/agents/model-context-protocol/tools/) to the MCP server, define each tool inside the `init()` method of `src/index.ts` using `this.server.tool(...)`.
+
+## Optional Authentication
+
+You can secure your MCP server by setting an `AUTH_TOKEN` secret:
+
+```bash
+wrangler secret put AUTH_TOKEN
+```
+
+When this secret exists, requests must include an `Authorization: Bearer <token>` header. If `AUTH_TOKEN` is not set, the server continues to operate without authentication for easier local testing.
+
+Example request:
+
+```bash
+curl -H "Authorization: Bearer <token>" https://remote-mcp-server-authless.<your-account>.workers.dev/sse
+```
 
 ## Connect to Cloudflare AI Playground
 
